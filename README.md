@@ -34,3 +34,51 @@ Whipsawing (The Drawback): In sideways markets, the moving averages may cross fr
 
 Absolute Return vs. Risk-Adjusted Return: The active strategy (blue line) may not always end up with a higher final dollar amount than the benchmark (gray line). However, quantitative models are often designed to minimize severe drawdowns (risk) rather than solely maximizing raw profit.
 
+## Added Risk Metrics
+To better to evaluate the performance of the model and trading strategy, I added risk metrics to the backtesting pipeline. These help ensure measurement of profitability and also the risk and volatility of the strategy. 
+
+# Where the changes were made
+The calculations were implemented inside the run_backtest() function src/backtester.py, in which this is where the equity curve of the strategy is generated, making it the correct place to compute the performance statistics. 
+
+# Metric Added: Strategy returns
+Daily percentage returns were calculated from the equity curve. 
+df["Strategy_Returns"] = df["Equity_Curve"].pct_change()
+This measures how much the portfolio value changes from one trading day to the next.
+
+# Metric Added: Benchmark Returns
+Returns for the buy-and-hold benchmark were also calculated for comparison.
+df["Benchmark_Returns"] = df["Buy_Hold_Curve"].pct_change()
+This allows the strategy performance to be compared against a passive investment.
+
+# Metric Added: Running Equity Peak
+To calculate drawdowns, the running maximum of the equity curve was computed.
+df["Equity_Peak"] = df["Equity_Curve"].cummax()
+This tracks the highest portfolio value reached up to each point in time.
+
+# Metric Added: Drawdown
+Drawdown measures how far the portfolio falls from its peak value. 
+A negative value represents a loss relative to the previous peak. 
+df["Drawdown"] = (df["Equity_Curve"] - df["Equity_Peak"]) / df["Equity_Peak"]
+
+# Metric Added: Maximum Drawdown
+Maximum drawdown is the largest peak-to-trough decline during the backtest. 
+max_drawdown = df["Drawdown"].min()
+This is an important risk metric because it is used to evaluate how much capital the strategy could lose during adverse market conditions. 
+
+# Metric Added: Annualized Volatility
+Volatility was calculated using the standard deviation of daily returns and annualized assuming 252 trading days per year. 
+volatility = df["Strategy_Returns"].std() * (252 ** 0.5)
+The measures the variability of returns and indicates the level of risk in the strategy. 
+
+# Metric Added: Sharpe Ratio
+The Sharpe ratio measures risk-adjusted returns. 
+sharpe = (df["Strategy_Returns"].mean() / df["Strategy_Returns"].std()) * (252 ** 0.5)
+A higher sharpe ratio indicates better returns relative to risk taken. 
+
+## Summary
+After adding these computations, the backtester now outputs:
+- Maximum drawdown
+- Annualized Volatility
+- Sharpe Ratio
+- Daily Strategy Returns
+- Benchmark Returns
