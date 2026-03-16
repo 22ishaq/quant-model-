@@ -25,4 +25,32 @@ def run_backtest(df: pd.DataFrame, initial_capital: float = 10000.0, trade_fee_p
     # Calculate a Buy & Hold equity curve for benchmark comparison
     df['Buy_Hold_Curve'] = initial_capital * (1 + df['Market_Return']).cumprod()
     
+    # Strategy daily returns
+    df["Strategy_Returns"] = df["Equity_Curve"].pct_change()
+
+    # Benchmark daily returns
+    df["Benchmark_Returns"] = df["Buy_Hold_Curve"].pct_change()
+        
+    # Strategy returns
+    df["Strategy_Returns"] = df["Equity_Curve"].pct_change()
+
+    # Benchmark returns
+    df["Benchmark_Returns"] = df["Buy_Hold_Curve"].pct_change()
+
+    # Running peak
+    df["Equity_Peak"] = df["Equity_Curve"].cummax()
+
+    # Drawdown
+    df["Drawdown"] = (df["Equity_Curve"] - df["Equity_Peak"]) / df["Equity_Peak"]
+
+    # Risk metrics
+    max_drawdown = df["Drawdown"].min()
+    volatility = df["Strategy_Returns"].std() * (252 ** 0.5)
+    sharpe = (df["Strategy_Returns"].mean() / df["Strategy_Returns"].std()) * (252 ** 0.5)
+
+    print("\n--- Risk Metrics ---")
+    print(f"Maximum Drawdown: {max_drawdown:.2%}")
+    print(f"Annual Volatility: {volatility:.2%}")
+    print(f"Sharpe Ratio: {sharpe:.2f}")
+
     return df

@@ -11,7 +11,7 @@ def main():
     INITIAL_CAPITAL = 10000.0
     
     # 2. Run Pipeline
-    df = fetch_data(TICKER, START_DATE, END_DATE)
+    df = fetch_data("S&P 500 ETF", "2015-01-01", "2023-12-31")
     df = apply_ma_crossover(df, short_window=50, long_window=200)
     df = run_backtest(df, initial_capital=INITIAL_CAPITAL, trade_fee_pct=0.001) # 0.1% fee per trade
     
@@ -24,6 +24,9 @@ def main():
     print(f"Final Strategy Value: ${final_portfolio_value:,.2f}")
     print(f"Final Buy & Hold Value: ${buy_and_hold_value:,.2f}")
     
+    max_drawdown = df["Drawdown"].min()
+    print(f"Max Drawdown: {max_drawdown:.2%}")
+
     # 4. Quick Plot
     plt.figure(figsize=(12, 6))
     plt.plot(df.index, df['Equity_Curve'], label='MA Crossover Strategy', color='blue')
@@ -32,7 +35,9 @@ def main():
     plt.ylabel("Portfolio Value ($)")
     plt.legend()
     plt.grid(True, alpha=0.3)
+    plt.savefig('equty_curve.png', bbox_inches='tight')
     plt.show()
+    
 
 if __name__ == "__main__":
     main()
